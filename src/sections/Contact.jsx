@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MessageCircle, Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 import { useInView } from '../hooks/useScrollAnimation';
 import { COMPANY, ABOUT } from '../data/content';
 
@@ -32,14 +33,31 @@ function ContactForm() {
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate send — replace with real backend/emailjs/formspree
-    setTimeout(() => {
+
+    try {
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        {
+          name: form.name,
+          email: form.email,
+          phone: form.phone || 'No proporcionado',
+          message: form.message,
+        },
+        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      );
+
       setLoading(false);
       setSent(true);
-    }, 1200);
+      setForm({ name: '', email: '', phone: '', message: '' });
+    } catch (err) {
+      setLoading(false);
+      console.error('Error sending email:', err);
+      alert('Error al enviar el mensaje. Por favor, intenta de nuevo.');
+    }
   };
 
   if (sent) {
